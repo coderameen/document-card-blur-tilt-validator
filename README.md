@@ -9,19 +9,19 @@ Production-ready service for validating document and ID card images by detecting
 2. Tilt / Perspective Check:
   Calculates corner angles from detected card edges.
   If any angle deviates more than 10° from 90°, the image is flagged as tilted (is_tilted_flag = True).
-3.Blur Check:
+3. Blur Check:
   Computes a weighted quality score using:
-    a) Laplacian variance
-    b) Tenengrad sharpness
-    c) Contrast
-    d) Edge density
-    e) Brightness
+       a) Laplacian variance
+       b) Tenengrad sharpness
+       c) Contrast
+       d) Edge density
+       e) Brightness
   If score < 0.42, the image is flagged as blurred (is_blur_flag = True).
-4.Final Validation Result:
+5. Final Validation Result:
   validate_doc_flag = True only when:
     a) No perspective distortion
-    b) No blur detected
-5.Multi-Card Support:
+     b) No blur detected
+7. Multi-Card Support:
   Handles both single-card and two-card (front/back) images by splitting into regions and validating each separately.
 
 
