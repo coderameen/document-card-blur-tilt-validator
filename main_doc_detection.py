@@ -265,7 +265,7 @@ def classify_quality(
     contrast: float,
     edge_pct: float,
     brightness_val: float,
-    quality_threshold: float = 0.42,
+    quality_threshold: float = 0.35,
 ) -> tuple[str, float]:
     """
     Weighted scoring system for image quality assessment.
@@ -312,14 +312,14 @@ def classify_quality(
         weights['brightness'] * brightness_score
     )
     
-    # Additional penalty for moderate focus (600-750 range): apply to overall score
+    # Additional penalty for moderate focus (500-600 range): apply to overall score
     # This catches images that are slightly blurry but might have good other metrics
-    # Less penalty for very low focus to avoid over-penalizing already low-scoring images
-    if 600.0 <= focus < 750.0:
-        focus_penalty = (750.0 - focus) / 150.0  # Penalty factor 0-1 (for focus 600-750)
+    # Reduced penalty range and severity to avoid false positives on good quality images
+    if 500.0 <= focus < 600.0:
+        focus_penalty = (600.0 - focus) / 100.0  # Penalty factor 0-1 (for focus 500-600)
         focus_penalty = min(1.0, focus_penalty)  # Cap at 1.0
-        # Reduce overall score by up to 65% for moderate focus (slightly blurry)
-        quality_score = quality_score * (1.0 - focus_penalty * 0.65)
+        # Reduce overall score by up to 40% for moderate-low focus (slightly blurry)
+        quality_score = quality_score * (1.0 - focus_penalty * 0.40)
     
     # Threshold: score >= quality_threshold is GOOD
     verdict = "GOOD" if quality_score >= quality_threshold else "BAD"
@@ -327,7 +327,7 @@ def classify_quality(
     return verdict, quality_score
 
 
-def check_blur(img: np.ndarray, quality_threshold: float = 0.42) -> bool:
+def check_blur(img: np.ndarray, quality_threshold: float = 0.35) -> bool:
     """
     Check if image is blurred.
     Returns True if blurred (BAD quality), False if not blurred (GOOD quality).
@@ -352,6 +352,10 @@ def check_blur(img: np.ndarray, quality_threshold: float = 0.42) -> bool:
         quality_threshold,
     )
     
+    # Debug output
+    print(f"Blur Detection Metrics - Focus: {focus_val:.2f}, Focus_small: {focus_small_val:.2f}, Tenengrad: {tenengrad_val:.2f}, Contrast: {contrast_val:.2f}, Edge%: {edge_pct:.2f}, Brightness: {bright_val:.2f}")
+    print(f"Quality Score: {quality_score:.4f}, Verdict: {verdict}, Threshold: {quality_threshold}")
+    
     # Return True if BAD (blurred), False if GOOD (not blurred)
     return verdict == "BAD"
 
@@ -361,7 +365,7 @@ def check_blur(img: np.ndarray, quality_threshold: float = 0.42) -> bool:
 def main():
     # Path to the test image
     # image_path = Path(__file__).parent / "Check/RepTraffic_FileStore_Docls-SA_FN_MAIN/content/cont_1764563163708.jpg"
-    image_path = Path(__file__).parent / "tilted_img.jpg"
+    image_path = Path(__file__).parent / "blurimg.png" #Test image path
     
     
     if not image_path.exists():
